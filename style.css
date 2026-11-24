@@ -402,8 +402,8 @@ button {
 
 .kpi-card {
   min-width: 0;
-  min-height: 156px;
-  padding: 22px;
+  min-height: 144px;
+  padding: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -809,7 +809,6 @@ footer {
     grid-column: auto;
   }
 
-  .kpi-grid,
   .ranking-list,
   .info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -840,7 +839,6 @@ footer {
 
   .hero-side,
   .filters-grid,
-  .kpi-grid,
   .ranking-list,
   .filtros-detalhes,
   .info-grid {
@@ -942,4 +940,11 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px s
   .app-hero { padding: 22px 18px; }
   .kpi-card { min-height: 132px; padding: 18px; }
   .kpi-value { font-size: 1.65rem; }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 599px) {
+  .kpi-grid { grid-template-columns: 1fr; }
 }
