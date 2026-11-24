@@ -29,12 +29,8 @@ const rubricColorMap = {
 const corRubrica = (rubrica, index = 0) => rubricColorMap[rubrica] || chartColors[index % chartColors.length];
 
 // ============================================
-// TOTAIS CONSOLIDADOS - dados oficiais ate 09/09/2026
+// BASES DE GASTOS ENVIADAS
 // ============================================
-const TOTAL_VALOR_LIBERADO = 20537532.05;
-const TOTAL_SALDO_DI       = 11216531.92;
-const TOTAL_SALDO_GERAL    = 91740545.52;
-const DATA_CAIXA_FIOTEC = "09/09/2026";
 
 // ============================================
 // DADOS: GASTOS DI 2026
@@ -96,12 +92,9 @@ function atualizarRotulosAno() {
     document.getElementById("btn-ano-2026")?.classList.toggle("active", anoAtivo === 2026);
     document.getElementById("heroKicker") && (document.getElementById("heroKicker").textContent = `Fiocruz Brasília | DI ${anoAtivo}`);
     document.getElementById("tableTitle") && (document.getElementById("tableTitle").textContent = `Tabela de Gastos DI ${anoAtivo}`);
-    document.getElementById("expenseSourceNote").hidden = anoAtivo !== 2026;
-    document.getElementById("expense2025SourceNote").hidden = anoAtivo !== 2025;
     document.getElementById("baseCountMeta") && (document.getElementById("baseCountMeta").textContent = `${gastos.length} gastos`);
-    document.getElementById("projectCountMeta") && (document.getElementById("projectCountMeta").textContent = String(projetos.length));
-    document.getElementById("cashDateMeta") && (document.getElementById("cashDateMeta").textContent = DATA_CAIXA_FIOTEC);
-    document.getElementById("saldoDataChip") && (document.getElementById("saldoDataChip").textContent = `Caixa Geral Fiotec - ${DATA_CAIXA_FIOTEC}`);
+    document.getElementById("projectCountMeta") && (document.getElementById("projectCountMeta").textContent = String(new Set(gastos.map(g => g.projeto)).size));
+    document.getElementById("areaCountMeta").textContent = String(new Set(gastos.map(g => g.area).filter(Boolean)).size);
 }
 
 function trocarAno(novoAno) {
@@ -172,13 +165,6 @@ function atualizarRanking() {
     });
 }
 
-function atualizarRankingSaldo() {
-    const container = document.getElementById("rankingSaldoList");
-    const comSaldo = projetos.filter(p => p.saldoDI > 0).sort((a,b) => b.saldoDI - a.saldoDI).slice(0,5);
-    if (!container) return;
-    if (comSaldo.length === 0) container.innerHTML = "<div class='empty-state'>Nenhum projeto com saldo DI positivo.</div>";
-    else container.innerHTML = comSaldo.map((p, i) => `<div class="ranking-item"><div class="ranking-position">${i+1}</div><div class="ranking-info"><div class="ranking-projeto">${escapar(p.id)}</div><small>${escapar(p.nome)}</small></div><div class="ranking-value">${fmt(p.saldoDI)}</div></div>`).join('');
-}
 
 function atualizarRubrica() {
     const mapa = new Map();
@@ -352,65 +338,15 @@ function aplicarFiltrosNaBase(base) {
 }
 
 function atualizarKPIs() {
-    const filtroProjeto = document.getElementById("filter-projeto").value;
-    const semFiltro = !(
-        filtroProjeto ||
-        document.getElementById("filter-rubrica").value ||
-        document.getElementById("filter-area").value ||
-        document.getElementById("filter-favorecido").value ||
-        document.getElementById("data-inicio").value ||
-        document.getElementById("data-fim").value
-    );
-    const haOutrosFiltros = !!(
-        document.getElementById("filter-rubrica").value ||
-        document.getElementById("filter-area").value ||
-        document.getElementById("filter-favorecido").value ||
-        document.getElementById("data-inicio").value ||
-        document.getElementById("data-fim").value
-    );
-    const projetoSelecionado = filtroProjeto
-        ? projetos.find(p => normalizarId(p.id) === normalizarId(filtroProjeto))
-        : null;
-    const usarConsolidadoProjeto = !!(projetoSelecionado && !haOutrosFiltros);
-
-    const totalGastoAno = semFiltro
-        ? (anoAtivo === 2025 ? TOTAL_GASTO_2025 : TOTAL_GASTO_2026)
-        : usarConsolidadoProjeto
-            ? gastoConsolidadoProjeto(projetoSelecionado)
-            : dadosFiltrados.reduce((acc, i) => acc + i.valor, 0);
-
-    let projetosFiltrados;
-    if (semFiltro) {
-        projetosFiltrados = projetos;
-    } else if (filtroProjeto) {
-        projetosFiltrados = projetos.filter(p => normalizarId(p.id) === normalizarId(filtroProjeto));
-    } else {
-        const idsUnicos = new Set(dadosFiltrados.map(g => normalizarId(g.projeto)));
-        projetosFiltrados = projetos.filter(p => idsUnicos.has(normalizarId(p.id)));
-    }
-
-    const valorTotalGastoDI = semFiltro
-        ? TOTAL_GASTO_DI_2025_2026
-        : usarConsolidadoProjeto
-            ? [...gastos2025, ...gastos2026].filter(g => normalizarId(g.projeto) === normalizarId(projetoSelecionado.id)).reduce((acc, g) => acc + g.valor, 0)
-            : [...aplicarFiltrosNaBase(gastos2025), ...aplicarFiltrosNaBase(gastos2026)].reduce((acc, i) => acc + i.valor, 0);
-
-    const valorLiberado = semFiltro
-        ? TOTAL_VALOR_LIBERADO
-        : projetosFiltrados.reduce((acc, p) => acc + (p.valorS || 0), 0);
-    const saldoDI = semFiltro
-        ? TOTAL_SALDO_DI
-        : projetosFiltrados.reduce((acc, p) => acc + (p.valorX ?? p.saldoDI ?? 0), 0);
-    const saldoGeral = semFiltro
-        ? TOTAL_SALDO_GERAL
-        : projetosFiltrados.reduce((acc, p) => acc + (p.valorY ?? p.saldoGeral ?? 0), 0);
-
+    const somar = base => base.reduce((total, g) => total + Math.round(g.valor * 100), 0) / 100;
+    const totalGastoAno = somar(dadosFiltrados);
+    const totalAmbosAnos = somar([...aplicarFiltrosNaBase(gastos2025), ...aplicarFiltrosNaBase(gastos2026)]);
+    const totalProjetos = new Set(dadosFiltrados.map(g => g.projeto)).size;
     document.getElementById("kpiContainer").innerHTML = `
-        <div class="kpi-card"><div class="kpi-title">Total gasto ${anoAtivo}</div><div class="kpi-value">${fmt(totalGastoAno)}</div><span class="kpi-meta">${dadosFiltrados.length} lançamentos na visão atual</span></div>
-        <div class="kpi-card"><div class="kpi-title">Valor DI financeiro liberado</div><div class="kpi-value">${fmt(valorLiberado)}</div><span class="kpi-meta">Base consolidada até set/2026</span></div>
-        <div class="kpi-card"><div class="kpi-title">Saldo total DI dos projetos</div><div class="kpi-value">${fmt(saldoDI)}</div><span class="kpi-meta">Caixa Geral Fiotec - ${DATA_CAIXA_FIOTEC}</span></div>
-        <div class="kpi-card"><div class="kpi-title">Valor total gasto DI</div><div class="kpi-value">${fmt(valorTotalGastoDI)}</div><span class="kpi-meta">2025 + 2026</span></div>
-        <div class="kpi-card"><div class="kpi-title">Saldo total geral disponível</div><div class="kpi-value">${fmt(saldoGeral)}</div><span class="kpi-meta">Caixa Geral Fiotec - ${DATA_CAIXA_FIOTEC}</span></div>
+        <article class="kpi-card kpi-card--primary"><div class="kpi-title"><i class="fas fa-wallet" aria-hidden="true"></i> Total gasto ${anoAtivo}</div><div class="kpi-value">${fmt(totalGastoAno)}</div><span class="kpi-meta">Soma dos lançamentos na visão atual</span></article>
+        <article class="kpi-card"><div class="kpi-title"><i class="fas fa-layer-group" aria-hidden="true"></i> Gasto acumulado DI</div><div class="kpi-value">${fmt(totalAmbosAnos)}</div><span class="kpi-meta">2025 + 2026 · mesmos filtros aplicados</span></article>
+        <article class="kpi-card"><div class="kpi-title"><i class="fas fa-folder-open" aria-hidden="true"></i> Projetos com gastos</div><div class="kpi-value">${totalProjetos}</div><span class="kpi-meta">Projetos distintos na visão atual</span></article>
+        <article class="kpi-card"><div class="kpi-title"><i class="fas fa-receipt" aria-hidden="true"></i> Lançamentos</div><div class="kpi-value">${dadosFiltrados.length}</div><span class="kpi-meta">Registros de ${anoAtivo} na visão atual</span></article>
     `;
 }
 
@@ -446,7 +382,6 @@ function atualizarTudo() {
     atualizarRubrica();
     atualizarAreaRubric();
     atualizarTabela();
-    atualizarRankingSaldo();
 }
 
 function aplicarFiltros() {
@@ -571,7 +506,6 @@ function configurarDetalhesProjeto() {
         else if (instNum) projeto = projetos.find(p => String(p.numInstrumento) === instNum);
         if (projeto) {
             const execucaoDI = gastoConsolidadoProjeto(projeto);
-            const percentualExecucao = projeto.valorTotal ? (execucaoDI / projeto.valorTotal * 100).toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + "%" : "N/A";
             if (projSelect.value !== projeto.id) projSelect.value = projeto.id;
             if (instSelect.value !== String(projeto.numInstrumento)) instSelect.value = String(projeto.numInstrumento);
             document.getElementById("projetoInfoContainer").classList.remove("is-hidden");
@@ -579,15 +513,11 @@ function configurarDetalhesProjeto() {
                 <div class="info-card"><div class="info-label">IDENTIFICAÇÃO DO PROJETO FIOTEC</div><div class="info-value">${escapar(projeto.id)}</div></div>
                 <div class="info-card"><div class="info-label">NÚMERO DO INSTRUMENTO</div><div class="info-value">${escapar(projeto.numInstrumento || "Não informado")}</div></div>
                 <div class="info-card"><div class="info-label">NOME DO PROJETO</div><div class="info-value">${escapar(projeto.nome)}</div></div>
-                <div class="info-card"><div class="info-label">VALOR TOTAL DO PROJETO</div><div class="info-value">${fmt(projeto.valorTotal)}</div></div>
                 <div class="info-card"><div class="info-label">EXECUÇÃO DI ${anoAtivo}</div><div class="info-value positive">${fmt(execucaoDI)}</div></div>
-                <div class="info-card"><div class="info-label">PERCENTUAL EXECUTADO</div><div class="info-value">${percentualExecucao}</div></div>
                 <div class="info-card"><div class="info-label">COORDENADOR</div><div class="info-value">${escapar(projeto.coordenador)}</div></div>
                 <div class="info-card"><div class="info-label">SECRETARIAS</div><div class="info-value">${escapar(projeto.secretarias || "Não informada")}</div></div>
                 <div class="info-card"><div class="info-label">INÍCIO DA VIGÊNCIA</div><div class="info-value">${dat(projeto.inicio)}</div></div>
                 <div class="info-card"><div class="info-label">FINAL DA VIGÊNCIA</div><div class="info-value">${dat(projeto.fim)}</div></div>
-                <div class="info-card"><div class="info-label">SALDO DI DISPONÍVEL</div><div class="info-value ${projeto.saldoDI >= 0 ? "positive" : ""}">${fmt(projeto.saldoDI)}</div></div>
-                <div class="info-card"><div class="info-label">SALDO GERAL DISPONÍVEL</div><div class="info-value ${projeto.saldoGeral >= 0 ? "positive" : ""}">${fmt(projeto.saldoGeral)}</div></div>
                 <div class="info-card objeto-text"><div class="info-label">OBJETO DO PROJETO</div><div class="info-value large">${escapar(projeto.objeto)}</div></div>
             `;
         } else {

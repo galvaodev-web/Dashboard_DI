@@ -11,7 +11,7 @@
 <script src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<link rel="stylesheet" href="style.css?v=20261124-2">
+<link rel="stylesheet" href="style.css?v=20261124-4">
 </head>
 <body>
 <div class="dashboard-container">
@@ -19,7 +19,7 @@
   <div class="title-section">
     <span id="heroKicker" class="hero-kicker">Fiocruz Brasília | DI 2026</span>
     <h1>Painel financeiro NUGP-DI</h1>
-    <p>Execução de gastos, saldos e projetos com filtros dinâmicos para acompanhamento do NUGP-DI.</p>
+    <p>Acompanhe os gastos de desenvolvimento institucional por projeto, área e modalidade.</p>
   </div>
   <div class="hero-side">
     <div class="ano-di-toggle" aria-label="Selecionar ano DI">
@@ -28,21 +28,19 @@
     </div>
     <div class="hero-meta" aria-label="Resumo da base">
       <div><span>Base</span><strong id="baseCountMeta">477 gastos</strong></div>
-      <div><span>Projetos</span><strong id="projectCountMeta">61</strong></div>
-      <div><span>Caixa Fiotec</span><strong id="cashDateMeta">09/09/2026</strong></div>
+      <div><span>Projetos com gastos</span><strong id="projectCountMeta">—</strong></div>
+      <div><span>Áreas demandantes</span><strong id="areaCountMeta">—</strong></div>
     </div>
   </div>
 </header>
 
-<p id="expense2025SourceNote" class="source-note" hidden>Gastos DI 2025: base enviada com 426 lançamentos e total de R$ 8.566.806,61. Saldos e recursos liberados: caixa de 09/09/2026.</p>
-
-<p id="expenseSourceNote" class="source-note">Gastos DI 2026: base enviada com 477 lançamentos, total de R$ 5.095.045,23. Datas a conferir na fonte: item 464 (0//10/2026) e item 495 (27/10/2028). Ambos integram o total de 2026; as datas originais foram preservadas. Saldos e recursos liberados: caixa de 09/09/2026.</p>
+<section class="kpi-grid" id="kpiContainer" aria-label="Indicadores financeiros"></section>
 
 <section class="filters-card">
   <div class="panel-heading">
     <div>
       <span class="section-eyebrow">Filtros</span>
-      <h2>Refinar visão do painel</h2>
+      <h2>Explorar os gastos</h2>
     </div>
     <div id="resultSummary" class="result-summary">Mostrando todos os lançamentos</div>
   </div>
@@ -61,14 +59,13 @@
   <div id="activeFilters" class="active-filters" aria-live="polite"></div>
 </section>
 
-<section class="kpi-grid" id="kpiContainer" aria-label="Indicadores financeiros"></section>
 
 <section class="charts-row charts-row--primary">
   <article class="chart-card">
     <div class="panel-heading">
       <div>
         <span class="section-eyebrow">Ranking</span>
-        <h3><i class="fas fa-chart-bar"></i> Projetos por recursos executados</h3>
+        <h3><i class="fas fa-chart-bar"></i> Projetos com maior gasto</h3>
       </div>
     </div>
     <canvas id="rankingAllProjectsChart"></canvas>
@@ -77,7 +74,7 @@
     <div class="panel-heading">
       <div>
         <span class="section-eyebrow">Composição</span>
-        <h3><i class="fas fa-chart-pie"></i> Utilização por tipo de gasto</h3>
+        <h3><i class="fas fa-chart-pie"></i> Distribuição dos gastos</h3>
       </div>
     </div>
     <canvas id="rubricChart"></canvas>
@@ -108,17 +105,6 @@
     </div>
   </div>
   <div id="gastos-table"></div>
-</section>
-
-<section class="ranking-container">
-  <div class="panel-heading">
-    <div>
-      <span class="section-eyebrow">Saldo disponível</span>
-      <h3><i class="fas fa-ranking-star"></i> Projetos com maior saldo DI</h3>
-    </div>
-    <span id="saldoDataChip" class="data-chip">Caixa Geral Fiotec - 09/09/2026</span>
-  </div>
-  <div class="ranking-list" id="rankingSaldoList"></div>
 </section>
 
 <section class="projeto-detalhes">
@@ -152,10 +138,10 @@
   </div>
 </div>
 
-<footer>Dashboard NUGP-DI | Dados oficiais da Fiocruz Brasília</footer>
+<footer>NUGP-DI · Fiocruz Brasília | Gastos calculados a partir das bases enviadas de 2025 e 2026</footer>
 </div>
 
-<script src="script.js?v=20261124-2" defer></script>
+<script src="script.js?v=20261124-4" defer></script>
 </body>
 </html>
 
