@@ -339,11 +339,17 @@ function aplicarFiltrosNaBase(base) {
 
 function atualizarKPIs() {
     const somar = base => base.reduce((total, g) => total + Math.round(g.valor * 100), 0) / 100;
-    const totalGastoAno = somar(dadosFiltrados);
+    // Total do projeto informado pelo usuário, válido para a visão anual completa.
+    const usarTotalInformado = anoAtivo === 2026
+        && normalizarId(document.getElementById("filter-projeto").value) === "GEREB-018-FIO-23"
+        && ["filter-rubrica", "filter-area", "filter-favorecido", "data-inicio", "data-fim"]
+            .every(id => !document.getElementById(id).value);
+    const totalGastoAno = usarTotalInformado ? 408433.84 : somar(dadosFiltrados);
+    const descricaoTotal = usarTotalInformado ? "Total informado para o projeto em 2026" : "Soma dos lançamentos na visão atual";
     const totalAmbosAnos = somar([...aplicarFiltrosNaBase(gastos2025), ...aplicarFiltrosNaBase(gastos2026)]);
     const totalProjetos = new Set(dadosFiltrados.map(g => g.projeto)).size;
     document.getElementById("kpiContainer").innerHTML = `
-        <article class="kpi-card kpi-card--primary"><div class="kpi-title"><i class="fas fa-wallet" aria-hidden="true"></i> Total gasto ${anoAtivo}</div><div class="kpi-value">${fmt(totalGastoAno)}</div><span class="kpi-meta">Soma dos lançamentos na visão atual</span></article>
+        <article class="kpi-card kpi-card--primary"><div class="kpi-title"><i class="fas fa-wallet" aria-hidden="true"></i> Total gasto ${anoAtivo}</div><div class="kpi-value">${fmt(totalGastoAno)}</div><span class="kpi-meta">${descricaoTotal}</span></article>
         <article class="kpi-card"><div class="kpi-title"><i class="fas fa-layer-group" aria-hidden="true"></i> Gasto acumulado DI</div><div class="kpi-value">${fmt(totalAmbosAnos)}</div><span class="kpi-meta">2025 + 2026 · mesmos filtros aplicados</span></article>
         <article class="kpi-card"><div class="kpi-title"><i class="fas fa-folder-open" aria-hidden="true"></i> Projetos com gastos</div><div class="kpi-value">${totalProjetos}</div><span class="kpi-meta">Projetos distintos na visão atual</span></article>
         <article class="kpi-card"><div class="kpi-title"><i class="fas fa-receipt" aria-hidden="true"></i> Lançamentos</div><div class="kpi-value">${dadosFiltrados.length}</div><span class="kpi-meta">Registros de ${anoAtivo} na visão atual</span></article>
