@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // FUNÇÕES AUXILIARES
 // ============================================
 const fmt = (v) => "R$ " + (Number.isFinite(Number(v)) ? Number(v) : 0).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
